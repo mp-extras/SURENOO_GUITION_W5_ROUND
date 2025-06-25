@@ -1,0 +1,23 @@
+{
+    "deploy": [
+        "../deploy_s3.md"
+    ],
+    "docs": "",
+    "features": [
+        "BLE",
+        "WiFi",
+        "Display",
+        "Touchscreen",
+        "Microphone",
+        "Speaker",
+        "SD Card"
+    ],
+    "images": [
+        "guition-w5-round.webp"
+    ],
+    "mcu": "esp32s3",
+    "product": "Guition-W5-Round",
+    "thumbnail": "",
+    "url": "https://www.surenoo.com/collections/258656/products/23280116",
+    "vendor": "Surenoo"
+}

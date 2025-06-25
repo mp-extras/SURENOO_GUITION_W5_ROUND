@@ -1,0 +1,380 @@
+#
+# Copyright (c) 2025 Mark Grosen <mark@grosen.org>
+# SPDX-License-Identifier: MIT
+#
+
+"""Class for ST77916 LCD controller FrameBuffer support"""
+
+from framebuf import FrameBuffer, RGB565
+from machine import Pin
+from time import sleep_ms
+from struct import pack
+from micropython import const
+
+from qspi import QSPI
+
+
+_INIT_SEQ = [
+    const((0x01, 0x00)),
+    120,
+    const((0x11, 0x00)),
+    120,
+    const((0xF0, 0x08)),
+    const((0xF2, 0x08)),
+    const((0x9B, 0x51)),
+    const((0x86, 0x53)),
+    const((0xF2, 0x80)),
+    const((0xF0, 0x00)),
+    const((0xF0, 0x01)),
+    const((0xF1, 0x01)),
+    const((0xB0, 0x54)),
+    const((0xB1, 0x3F)),
+    const((0xB2, 0x2A)),
+    const((0xB4, 0x46)),
+    const((0xB5, 0x34)),
+    const((0xB6, 0xD5)),
+    const((0xB7, 0x30)),
+    const((0xBA, 0x00)),
+    const((0xBB, 0x08)),
+    const((0xBC, 0x08)),
+    const((0xBD, 0x00)),
+    const((0xC0, 0x80)),
+    const((0xC1, 0x10)),
+    const((0xC2, 0x37)),
+    const((0xC3, 0x80)),
+    const((0xC4, 0x10)),
+    const((0xC5, 0x37)),
+    const((0xC6, 0xA9)),
+    const((0xC7, 0x41)),
+    const((0xC8, 0x51)),
+    const((0xC9, 0xA9)),
+    const((0xCA, 0x41)),
+    const((0xCB, 0x51)),
+    const((0xD0, 0x91)),
+    const((0xD1, 0x68)),
+    const((0xD2, 0x69)),
+    const((0xF5, 0x00, 0xA5)),
+    const((0xDD, 0x3F)),
+    const((0xDE, 0x3F)),
+    const((0xF1, 0x10)),
+    const((0xF0, 0x00)),
+    const((0xF0, 0x02)),
+    const((0xE0, 0x70, 0x09, 0x12, 0x0C, 0x0B, 0x27, 0x38, 0x54, 0x4E, 0x19, 0x15, 0x15, 0x2C, 0x2F)),
+    const((0xE1, 0x70, 0x08, 0x11, 0x0C, 0x0B, 0x27, 0x38, 0x43, 0x4C, 0x18, 0x14, 0x14, 0x2B, 0x2D)),
+    const((0xF0, 0x10)),
+    const((0xF3, 0x10)),
+    const((0xE0, 0x08)),
+    const((0xE1, 0x00)),
+    const((0xE2, 0x00)),
+    const((0xE3, 0x00)),
+    const((0xE4, 0xE0)),
+    const((0xE5, 0x06)),
+    const((0xE6, 0x21)),
+    const((0xE7, 0x00)),
+    const((0xE8, 0x05)),
+    const((0xE9, 0x82)),
+    const((0xEA, 0xDF)),
+    const((0xEB, 0x89)),
+    const((0xEC, 0x20)),
+    const((0xED, 0x14)),
+    const((0xEE, 0xFF)),
+    const((0xEF, 0x00)),
+    const((0xF8, 0xFF)),
+    const((0xF9, 0x00)),
+    const((0xFA, 0x00)),
+    const((0xFB, 0x30)),
+    const((0xFC, 0x00)),
+    const((0xFD, 0x00)),
+    const((0xFE, 0x00)),
+    const((0xFF, 0x00)),
+    const((0x60, 0x42)),
+    const((0x61, 0xE0)),
+    const((0x62, 0x40)),
+    const((0x63, 0x40)),
+    const((0x64, 0x02)),
+    const((0x65, 0x00)),
+    const((0x66, 0x40)),
+    const((0x67, 0x03)),
+    const((0x68, 0x00)),
+    const((0x69, 0x00)),
+    const((0x6A, 0x00)),
+    const((0x6B, 0x00)),
+    const((0x70, 0x42)),
+    const((0x71, 0xE0)),
+    const((0x72, 0x40)),
+    const((0x73, 0x40)),
+    const((0x74, 0x02)),
+    const((0x75, 0x00)),
+    const((0x76, 0x40)),
+    const((0x77, 0x03)),
+    const((0x78, 0x00)),
+    const((0x79, 0x00)),
+    const((0x7A, 0x00)),
+    const((0x7B, 0x00)),
+    const((0x80, 0x48)),
+    const((0x81, 0x00)),
+    const((0x82, 0x05)),
+    const((0x83, 0x02)),
+    const((0x84, 0xDD)),
+    const((0x85, 0x00)),
+    const((0x86, 0x00)),
+    const((0x87, 0x00)),
+    const((0x88, 0x48)),
+    const((0x89, 0x00)),
+    const((0x8A, 0x07)),
+    const((0x8B, 0x02)),
+    const((0x8C, 0xDF)),
+    const((0x8D, 0x00)),
+    const((0x8E, 0x00)),
+    const((0x8F, 0x00)),
+    const((0x90, 0x48)),
+    const((0x91, 0x00)),
+    const((0x92, 0x09)),
+    const((0x93, 0x02)),
+    const((0x94, 0xE1)),
+    const((0x95, 0x00)),
+    const((0x96, 0x00)),
+    const((0x97, 0x00)),
+    const((0x98, 0x48)),
+    const((0x99, 0x00)),
+    const((0x9A, 0x0B)),
+    const((0x9B, 0x02)),
+    const((0x9C, 0xE3)),
+    const((0x9D, 0x00)),
+    const((0x9E, 0x00)),
+    const((0x9F, 0x00)),
+    const((0xA0, 0x48)),
+    const((0xA1, 0x00)),
+    const((0xA2, 0x04)),
+    const((0xA3, 0x02)),
+    const((0xA4, 0xDC)),
+    const((0xA5, 0x00)),
+    const((0xA6, 0x00)),
+    const((0xA7, 0x00)),
+    const((0xA8, 0x48)),
+    const((0xA9, 0x00)),
+    const((0xAA, 0x06)),
+    const((0xAB, 0x02)),
+    const((0xAC, 0xDE)),
+    const((0xAD, 0x00)),
+    const((0xAE, 0x00)),
+    const((0xAF, 0x00)),
+    const((0xB0, 0x48)),
+    const((0xB1, 0x00)),
+    const((0xB2, 0x08)),
+    const((0xB3, 0x02)),
+    const((0xB4, 0xE0)),
+    const((0xB5, 0x00)),
+    const((0xB6, 0x00)),
+    const((0xB7, 0x00)),
+    const((0xB8, 0x48)),
+    const((0xB9, 0x00)),
+    const((0xBA, 0x0A)),
+    const((0xBB, 0x02)),
+    const((0xBC, 0xE2)),
+    const((0xBD, 0x00)),
+    const((0xBE, 0x00)),
+    const((0xBF, 0x00)),
+    const((0xC0, 0x12)),
+    const((0xC1, 0xAA)),
+    const((0xC2, 0x65)),
+    const((0xC3, 0x74)),
+    const((0xC4, 0x47)),
+    const((0xC5, 0x56)),
+    const((0xC6, 0x00)),
+    const((0xC7, 0x88)),
+    const((0xC8, 0x99)),
+    const((0xC9, 0x33)),
+    const((0xD0, 0x21)),
+    const((0xD1, 0xAA)),
+    const((0xD2, 0x65)),
+    const((0xD3, 0x74)),
+    const((0xD4, 0x47)),
+    const((0xD5, 0x56)),
+    const((0xD6, 0x00)),
+    const((0xD7, 0x88)),
+    const((0xD8, 0x99)),
+    const((0xD9, 0x33)),
+    const((0xF3, 0x01)),
+    const((0xF0, 0x00)),
+    const((0xF0, 0x01)),
+    const((0xF1, 0x01)),
+    const((0xA0, 0x0B)),
+    const((0xA3, 0x2A)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x2B)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x2C)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x2D)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x2E)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x2F)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x30)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x31)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x32)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA3, 0x33)),
+    const((0xA5, 0xC3)),
+     1,
+    const((0xA0, 0x09)),
+    const((0xF1, 0x10)),
+    const((0xF0, 0x00)),
+    const((0x2A, 0x00, 0x00, 0x01, 0x67)),
+    const((0x2B, 0x01, 0x68, 0x01, 0x68)),
+    const((0x4D, 0x00)),
+    const((0x4E, 0x00)),
+    const((0x4F, 0x00)),
+    const((0x4C, 0x01)),
+     10,
+    const((0x4C, 0x00)),
+    const((0x2A, 0x00, 0x00, 0x01, 0x67)),
+    const((0x2B, 0x00, 0x00, 0x01, 0x67)),
+    const((0x21, 0x00)),
+    const((0x3A, 0x55)), # color=16
+    const((0x11, 0x00)),
+    120,
+    const((0x13, )),
+    50,
+    const((0x29, 0x00)),
+    50,
+]
+
+
+MAD_RGB = const(0x00)
+MAD_MX = const(0x40)
+MAD_MY = const(0x80)
+SLEEPIN = const(0x10)
+SLEEPOUT = const(0x11)
+INVON = const(0x21)
+INVOFF = const(0x20)
+CASET = const(0x2a)
+RASET = const(0x2b)
+MADCTL = const(0x36)
+
+
+class ST77916(FrameBuffer):
+    def __init__(self, qspi: QSPI, cs: Pin, reset: Pin|None=None, rotation=0):
+        self.width = 360
+        self.height = 360
+        self._spi = qspi
+        self._cs = cs
+        self._rst = reset
+        self._sleep = False
+        self._invert = False
+
+        self._buffer = bytearray(self.width * self.height * 2)
+        super().__init__(self._buffer, self.width, self.height, RGB565)
+
+        self._reset()
+
+        for v in _INIT_SEQ:
+            if isinstance(v, int):
+                sleep_ms(v)
+            else:
+                self._write_cmd(v[0], bytes(v[1:]))
+
+        self.rotation = rotation
+
+    def _reset(self):
+        if self._rst:
+            self._rst(1)
+            sleep_ms(130)
+            self._rst(0)
+            sleep_ms(130)
+            self._rst(1)
+            sleep_ms(300)
+
+    def _write_cmd(self, cmd, data=None):
+        self._cs(0)
+        self._spi.write_cmd(cmd, data)
+        self._cs(1)
+
+    @property
+    def rotation(self):
+        """Get or Set the rotation of the display: 0 - 3 correspond to 0, 90, 180, 270"""
+        return self._rotation
+
+    @rotation.setter
+    def rotation(self, value):
+        self._rotation = value
+
+        setting = MAD_RGB
+        if value == 0:
+            self._write_cmd(CASET, pack(">hh", 0, 359))
+            self._write_cmd(RASET, pack(">hh", 1, 360))
+        if value == 1:
+            setting |= MAD_MY | 0x20
+            self._write_cmd(CASET, pack(">hh", 0, 359))
+            self._write_cmd(RASET, pack(">hh", 0, 359))
+        elif value == 2:
+            setting |= (MAD_MX | MAD_MY)
+            self._write_cmd(CASET, pack(">hh", 0, 359))
+            self._write_cmd(RASET, pack(">hh", 0, 359))
+        elif value == 3:
+            setting |= MAD_MX | 0x20
+            self._write_cmd(CASET, pack(">hh", 1, 360))
+            self._write_cmd(RASET, pack(">hh", 0, 359))
+
+        self._write_cmd(MADCTL, bytes([setting]))
+
+    @property
+    def sleep(self):
+        "Sleep with display off to save power"
+        return self._sleep
+
+    @sleep.setter
+    def sleep(self, value):
+        if value == self._sleep:
+            return
+
+        if value:
+            self._write_cmd(SLEEPIN)
+            sleep_ms(120)
+        else:
+            self._write_cmd(SLEEPOUT)
+            sleep_ms(50)
+
+        self._sleep = bool(value)
+
+    @property
+    def invert(self):
+        """ Invert the pixels shown in the display """
+        return self._invert
+
+    @invert.setter
+    def invert(self, value):
+        self._invert = bool(value)
+        # display requires invert for normal viewing, so reverse op here
+        if self._invert:
+            self._write_cmd(INVOFF)
+        else:
+            self._write_cmd(INVON)
+
+
+    def deinit(self):
+        self._spi.deinit()
+
+    def show(self):
+        self._cs(0)
+        self._spi.write_data(self._buffer)
+        self._cs(1)
+
+    @staticmethod
+    def rgb(r, g, b):
+        """ Return a RGB565 value corresponding to the supplied 24-bit RGB value """
+        rgb = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | ((b & 0xF8) >> 3)
+        return (rgb >> 8) | ((rgb & 0xff) << 8)
