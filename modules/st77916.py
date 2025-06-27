@@ -333,7 +333,7 @@ class ST77916(FrameBuffer):
 
     @property
     def sleep(self):
-        "Sleep with display off to save power"
+        """Sleep with display off to save power"""
         return self._sleep
 
     @sleep.setter

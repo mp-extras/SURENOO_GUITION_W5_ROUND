@@ -1,3 +1,2 @@
-include(${CMAKE_CURRENT_LIST_DIR}/micropython.cmake)
-include(/home/mark/Projects/mp_extras/modules/jpegd/micropython.cmake)
-# include(/home/mark/Stuff/framebuf-plus/framebuf/micropython.cmake)
+# include(${CMAKE_CURRENT_LIST_DIR}/c_modules/jpegd/micropython.cmake)
+include(${CMAKE_CURRENT_LIST_DIR}/c_modules/qspi/micropython.cmake)

@@ -19,6 +19,16 @@ MicroPython information.
 You can request Surenoo's technical documentation and example code from
 <info@surenoo.com>. Surenoo store [website](https://www.surenoo.com/collections/258656/products/23280116).
 
+## Example
+
+You can see how all the major peripherals (minus WiFi and Bluetooth) are used together
+in the basic [example](examples/example.py). This code uses the various `make` utility
+functions to initialize peripherals, and then looks for touches in two boxes displayed
+on the screen. Touching the `Record` box invokes the `record` function to save
+samples from the microphone to a file on the SD card. Similarly, the `Play` box
+plays back the previously recorded file. The modules and classes used are
+described briefly in the [Modules](#modules) section.
+
 ## Configuration
 
 ### Pins
@@ -70,6 +80,7 @@ Other functions:
 
 * `backlight()`: set the display backlight, 0 - 100% using PWM
 * `make_speaker()`: create an I2S instance for the speaker output
+* `make_mic()`: create an I2S instance for the microphone input
 * `make_touch()`: create a touchscreen controller
 
 ### st77916.py
@@ -88,7 +99,7 @@ methods, the `ST77916` provides the following properties (get/set):
 
 The overall brightness of the display can be changed using PWM on the
 `Pin.board.LCD_BLK` pin. A utility function, `backlight()` is provided in the
-`guition_w5_round.py` module (below).
+`guition_w5_round.py` module. [Example](examples/display.py)
 
 ``` python
 from time import sleep
@@ -137,10 +148,13 @@ def make_display():
                    reset=Pin(Pin.board.LCD_RST, Pin.OUT, value=1))
 ```
 
+Note that the `ST77916` class uses a quad-SPI driver, `QSPI`. This is implemented
+via a user C module in [c_modules/qspi](c_modules/qspi) directory.
+
 ### cst8xx.py
 
 This module provides the `CST8XX` class that supplies methods for detecting
-and reporting touch coordinates on the display.
+and reporting touch coordinates on the display. [Example](examples/touch.py)
 
 ``` python
 from time import sleep
@@ -173,7 +187,7 @@ def make_touch():
     return CST8XX(I2C(0), intr=Pin(Pin.board.TP_INT, Pin.IN))
 ```
 
-### DAC
+### DAC/Headphones
 
 The PCM5100 stereo I2S DAC only requires the built-in I2S class. There are
 no programmable options other than the "soft mute" function controlled by
@@ -192,7 +206,7 @@ def make_speaker(num_chan, bits, sample_rate):
                rate=sample_rate, ibuf=40000)
 ```
 
-The simple example below shows how to play a tone through the DAC.
+The simple [example](examples/speaker.py) below shows how to play a tone through the DAC.
 
 ``` python
 from math import sin, tau
@@ -221,8 +235,7 @@ main()
 
 ### Microphone
 
-The microphone is also connected via I2S and requires no other support other
-than the `I2S` class.
+The microphone is also connected via I2S and requires no other support.
 
 ``` python
 from machine import Pin, I2S
@@ -250,7 +263,7 @@ def mount_sd(root="/sd"):
     mount(sd, root)
 ```
 
-A simple example:
+A simple [example](examples/sd.py):
 
 ``` python
 from os import listdir
@@ -266,9 +279,23 @@ def main():
 main()
 ```
 
-## Example
-
 ## Build
+
+You build the MicroPython firmware for this board using the `Makefile` and following
+the [instructions](https://github.com/micropython/micropython/ports/esp32/README.md)
+in the `ports/esp32` directory.
+
+``` shell
+bash$ activate ESP-IDF environment
+bash$ make MICROPYTHON=/path/to/micropython/src deploy
+```
+
+Using the `deploy` target, you can build and flash in one step.
+
+The build dependencies:
+
+* MicroPython v1.26.0-preview c16a4db151
+* ESP-IDF 5.4
 
 ## TODO
 
