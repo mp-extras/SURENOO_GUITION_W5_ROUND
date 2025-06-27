@@ -33,14 +33,14 @@ described briefly in the [Modules](#modules) section.
 
 ### Pins
 
-Pin assignments are set in `pins.csv` and (mostly) follow the naming
+Pin assignments are set in [pins.csv](./pins.csv) and (mostly) follow the naming
 in the schematic. You can access these via the `Pin.board` class,
 e.g., `Pin.board.TP_SCL`.
 
-The MicroPython configuration, `mpconfigboard.h` sets the default pins for I2C
-and SPI. The IDF SDK configuration in `sdkconfig.board` specifies a 16MB flash
-partition, enables the octal-mode 8MB PSRAM and sets the default CPU frequency
-to 240MHz. Example output showing the results:
+The MicroPython configuration, [mpconfigboard.h](./mpconfigboard.h) sets the
+default pins for I2C and SPI. The IDF SDK configuration in `sdkconfig.board`
+specifies a 16MB flash partition, enables the octal-mode 8MB PSRAM and sets the
+default CPU frequency to 240MHz. Example output showing the results:
 
 ``` text
 3.4.0; MicroPython v1.26.0-preview.257.gc16a4db151.dirty on 2025-06-24
@@ -292,11 +292,7 @@ bash$ make MICROPYTHON=/path/to/micropython/src deploy
 
 Using the `deploy` target, you can build and flash in one step.
 
-The build dependencies:
+The latest build dependencies versions used:
 
 * MicroPython v1.26.0-preview c16a4db151
 * ESP-IDF 5.4
-
-## TODO
-
-* Freeze `modules/` in `manifest.py`
