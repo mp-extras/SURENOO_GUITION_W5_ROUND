@@ -15,6 +15,4 @@
 #define MICROPY_HW_SPI2_MISO                (2)
 #define MICROPY_HW_SPI2_SCK                 (3)
 
-#define MICROPY_PY_SYS_SETTRACE             (1)
-
 #define MICROPY_REPL_EMACS_KEYS             (1)

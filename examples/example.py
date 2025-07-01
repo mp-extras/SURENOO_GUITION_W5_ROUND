@@ -65,7 +65,7 @@ def main():
     try:
         mount_sd("/sd")
     except OSError as e:
-        print(f"Insure a FAT formatted SD card is inserted: OSError {e}")
+        print(f"Ensure a FAT formatted SD card is inserted: OSError {e}")
         sys.exit(1)
 
     spkr = make_speaker(1, 16, SAMPLE_RATE)

@@ -1,8 +1,9 @@
 # Surenoo ESP32-S3 Guition-W5-Round Board
 
 This project provides MicroPython configuration and support code for the Surenoo
-Guition-W5-Round board. This doc only covers board-specific details. See the [Quick Reference](https://docs.micropython.org/en/latest/esp32/quickref.html) for generic ESP32
-MicroPython information.
+Guition-W5-Round board. This doc only covers board-specific details. See the
+[Quick Reference](https://docs.micropython.org/en/latest/esp32/quickref.html)
+for generic ESP32 MicroPython information.
 
 ![Picture of Guition-W5-Round board](guition-w5-round.webp)
 
@@ -282,12 +283,12 @@ main()
 ## Build
 
 You build the MicroPython firmware for this board using the `Makefile` and following
-the [instructions](https://github.com/micropython/micropython/ports/esp32/README.md)
+the [instructions](https://github.com/micropython/micropython/blob/master/ports/esp32/README.md)
 in the `ports/esp32` directory.
 
 ``` shell
-bash$ activate ESP-IDF environment
-bash$ make MICROPYTHON=/path/to/micropython/src deploy
+bash$ . /path/to/esp-idf/export.sh     # activate ESP-IDF environment
+bash$ make MICROPYTHON=/path/to/micropython deploy
 ```
 
 Using the `deploy` target, you can build and flash in one step.
