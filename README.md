@@ -1,5 +1,21 @@
 # Surenoo ESP32-S3 Guition-W5-Round Board
 
+<!--toc:start-->
+- [Surenoo ESP32-S3 Guition-W5-Round Board](#surenoo-esp32-s3-guition-w5-round-board)
+  - [Example](#example)
+  - [Configuration](#configuration)
+    - [Pins](#pins)
+  - [Modules](#modules)
+    - [guition_w5_round.py (board.py)](#guitionw5roundpy-boardpy)
+    - [st77916.py](#st77916py)
+    - [cst8xx.py](#cst8xxpy)
+    - [DAC/Headphones](#dacheadphones)
+    - [Microphone](#microphone)
+    - [SD Card](#sd-card)
+  - [Build](#build)
+  - [Flash Latest Release](#flash-latest-release)
+<!--toc:end-->
+
 This project provides MicroPython configuration and support code for the Surenoo
 Guition-W5-Round board. This doc only covers board-specific details. See the
 [Quick Reference](https://docs.micropython.org/en/latest/esp32/quickref.html)
@@ -297,3 +313,7 @@ The latest build dependencies versions used:
 
 * MicroPython v1.26.0-preview c16a4db151
 * ESP-IDF 5.4
+
+## Flash Latest Release
+
+You can flash the [latest release](https://mp-extras.github.io/micropython-for-surenoo-guition-w5-round.html#micropython-for-surenoo-guition-w5-round) using a Chrome-based browser.
