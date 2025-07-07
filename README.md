@@ -6,9 +6,9 @@
   - [Configuration](#configuration)
     - [Pins](#pins)
   - [Modules](#modules)
-    - [guition_w5_round.py (board.py)](#guitionw5roundpy-boardpy)
-    - [st77916.py](#st77916py)
-    - [cst8xx.py](#cst8xxpy)
+    - [`guition_w5_round.py` or `board.py`](#guitionw5roundpy-or-boardpy)
+    - [`st77916.py`](#st77916py)
+    - [`cst8xx.py`](#cst8xxpy)
     - [DAC/Headphones](#dacheadphones)
     - [Microphone](#microphone)
     - [SD Card](#sd-card)
@@ -34,29 +34,29 @@ for generic ESP32 MicroPython information.
 * USB-C
 
 You can request Surenoo's technical documentation and example code from
-<info@surenoo.com>. Surenoo store [website](https://www.surenoo.com/collections/258656/products/23280116).
+`<info@surenoo.com>`. Surenoo store [website](https://www.surenoo.com/collections/258656/products/23280116).
 
 ## Example
 
-You can see how all the major peripherals (minus WiFi and Bluetooth) are used together
-in the basic [example](examples/example.py). This code uses the various `make` utility
-functions to initialize peripherals, and then looks for touches in two boxes displayed
-on the screen. Touching the `Record` box invokes the `record` function to save
-samples from the microphone to a file on the SD card. Similarly, the `Play` box
-plays back the previously recorded file. The modules and classes used are
-described briefly in the [Modules](#modules) section.
+You can see usage of all the major peripherals (minus Wi-Fi and Bluetooth)
+together in the basic [example](examples/example.py). This code uses the
+`make_*` utility functions to initialize peripherals, and then looks for touches
+in two boxes displayed on the screen. Touching the `Record` box invokes the
+`record` function to save samples from the microphone to a file on the SD card.
+Similarly, the `Play` box plays back the recorded file. The [Modules](#modules) section
+briefly describes the modules and classes.
 
 ## Configuration
 
 ### Pins
 
-Pin assignments are set in [pins.csv](./pins.csv) and (mostly) follow the naming
+[pins.csv](./pins.csv) sets pin assignments and mostly follows the naming
 in the schematic. You can access these via the `Pin.board` class,
-e.g., `Pin.board.TP_SCL`.
+for example, `Pin.board.TP_SCL`.
 
 The MicroPython configuration, [mpconfigboard.h](./mpconfigboard.h) sets the
 default pins for I2C and SPI. The IDF SDK configuration in `sdkconfig.board`
-specifies a 16MB flash partition, enables the octal-mode 8MB PSRAM and sets the
+specifies a 16 MB flash partition, enables the octal-mode 8 MB PSRAM and sets the
 default CPU frequency to 240MHz. Example output showing the results:
 
 ``` text
@@ -80,14 +80,14 @@ Data: (1, 129, 2097152, 14680064, 'vfs', False)
 ```
 
 Of course, you can use different pins for the SPI and I2C instances
-when creating them if these defaults do not match your hardware requirements.
+when creating them if these defaults don't match your hardware requirements.
 
 ## Modules
 
-### guition_w5_round.py (board.py)
+### `guition_w5_round.py` or `board.py`
 
-The `guition_w5_round.py` (aliased as board.py) module provides utility functions for
-using the various board peripherals.
+The `guition_w5_round.py` module, aliased as `board.py`, provides utility functions for
+initializing the board peripherals.
 
 A convenience function, `make_display()`, constructs a`ST77916`display
 driver object, from the `st77916.py` module and also enables the backlight
@@ -100,22 +100,20 @@ Other functions:
 * `make_mic()`: create an I2S instance for the microphone input
 * `make_touch()`: create a touchscreen controller
 
-### st77916.py
+### `st77916.py`
 
 This module implements a `framebuf.FrameBuffer` class, `ST77916`, for the
-controller of the 360x360 16-bit (RGB565) color display. This boards uses a quad-SPI
+controller of the 360x360 16-bit RGB565 color display. This boards uses a quad-SPI
 interface between the ST77916 and the ESP32-S3.
 
-In addition to the standard base
-[`FrameBuffer`](https://docs.micropython.org/en/latest/library/framebuf.html)
-methods, the `ST77916` provides the following properties (get/set):
+The `ST77916` provides the following properties beyond the base methods [`FrameBuffer`](https://docs.micropython.org/en/latest/library/framebuf.html):
 
-* `rotation` - get/set the orientation (rotation) of the display
+* `rotation` - get/set the orientation/rotation of the display
 * `invert` - invert/un-invert the display
-* `sleep` - sleep/awake the display - saves power while retaining the internal framebuffer memory
+* `sleep` - sleep/awake the display - saves power while retaining the internal `FrameBuffer` memory
 
-The overall brightness of the display can be changed using PWM on the
-`Pin.board.LCD_BLK` pin. A utility function, `backlight()` is provided in the
+You can change the brightness of the display using PWM on the
+`Pin.board.LCD_BLK` pin. A utility function, `backlight()` exists in the
 `guition_w5_round.py` module. [Example](examples/display.py)
 
 ``` python
@@ -165,10 +163,10 @@ def make_display():
                    reset=Pin(Pin.board.LCD_RST, Pin.OUT, value=1))
 ```
 
-Note that the `ST77916` class uses a quad-SPI driver, `QSPI`. This is implemented
+Note that the `ST77916` class uses a quad-SPI driver, `QSPI`, implemented
 via a user C module in [c_modules/qspi](c_modules/qspi) directory.
 
-### cst8xx.py
+### `cst8xx.py`
 
 This module provides the `CST8XX` class that supplies methods for detecting
 and reporting touch coordinates on the display. [Example](examples/touch.py)
@@ -206,10 +204,10 @@ def make_touch():
 
 ### DAC/Headphones
 
-The PCM5100 stereo I2S DAC only requires the built-in I2S class. There are
+The PCM5100 stereo I2S DAC only requires the built-in I2S class, with
 no programmable options other than the "soft mute" function controlled by
 the `Pin.board.DAC_XSMT` pin. The `make_speaker()` function sets this pin to 1
-(high) before creating the I2S instance:
+before creating the I2S instance:
 
 ``` python
 from machine import Pin, I2S
@@ -252,7 +250,7 @@ main()
 
 ### Microphone
 
-The microphone is also connected via I2S and requires no other support.
+The microphone also connects via I2S and requires no other support.
 
 ``` python
 from machine import Pin, I2S
